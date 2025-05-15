@@ -39,11 +39,11 @@ const createCartRows = (items: CartItem[]): CartRow[] => {
   return items.map((item) => ({
     id: item.id,
     productId: item.id,
-    title: item.title,
-    price: item.price,
-    quantity: item.quantity,
-    total: item.price * item.quantity,
-    image: item.image
+    title: item.title || '',
+    price: typeof item.price === 'number' ? item.price : 0,
+    quantity: item.quantity || 0,
+    total: typeof item.price === 'number' ? item.price * (item.quantity || 0) : 0,
+    image: item.url || ''
   }));
 };
 

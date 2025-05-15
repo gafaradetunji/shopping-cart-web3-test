@@ -69,13 +69,13 @@ export const adaptJSONPlaceholderProduct = (item: any): Product => {
   
   // Use random images from Unsplash
   const imageId = Math.floor(Math.random() * 1000);
-  const image = `https://source.unsplash.com/random/300x200?product&sig=${imageId}`;
+  const url = `https://source.unsplash.com/random/300x200?product&sig=${imageId}`;
   
   return {
     id: item.id,
     title: item.title.split(' ').slice(0, 3).join(' '), // Shorten the title
     description: item.title,
     price,
-    image,
+    url,
   };
 };

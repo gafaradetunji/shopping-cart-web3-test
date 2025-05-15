@@ -6,9 +6,15 @@ import { Cart } from '../../components';
 
 export const Header: React.FC = () => {
   const items = useCartStore(state => state.items);
+  const updateCartRows = useCartStore(state => state.updateCartRows);
   const [cartOpen, setCartOpen] = useState(false);
   
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const handleOpenCart = () => {
+    updateCartRows();
+    setCartOpen(true);
+  };
   
   return (
     <>
@@ -18,7 +24,7 @@ export const Header: React.FC = () => {
             Shopping Cart Demo
           </Typography>
           <Box>
-            <IconButton color="inherit" onClick={() => setCartOpen(true)}>
+            <IconButton color="inherit" onClick={handleOpenCart}>
               <Badge badgeContent={totalItems} color="error">
                 <ShoppingCartIcon />
               </Badge>

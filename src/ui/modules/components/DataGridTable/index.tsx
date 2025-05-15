@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Drawer, Box, Typography, IconButton, Divider, TextField, 
-  Button, Stack, Alert, Grid
+  Button, Stack, Alert, Grid,
+  Avatar
 } from '@mui/material';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import CloseIcon from '@mui/icons-material/Close';
@@ -24,11 +25,20 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
     removeItem, 
     updateQuantity, 
     validateCoupon, 
-    applyCoupon 
+    applyCoupon,
+    updateCartRows,
+    items
   } = useCartStore();
   
   const [couponCode, setCouponCode] = useState('');
   const [couponMessage, setCouponMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  
+  // Initialize cart rows when drawer opens
+  useEffect(() => {
+    if (open) {
+      updateCartRows();
+    }
+  }, [open, updateCartRows]);
   
   const handleApplyCoupon = () => {
     const result = validateCoupon(couponCode);
@@ -44,13 +54,12 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
       width: 200,
       renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box
-            component="img"
+          <Avatar 
             src={params.value as string}
-            alt={params.row.title}
-            sx={{ width: 50, height: 50, objectFit: 'cover' }}
+            alt={params.row.title || 'Product'}
+            sx={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 1 }}
           />
-          <Typography variant="body2">{params.row.title}</Typography>
+          <Typography variant="body2">{params.row.title || 'Product'}</Typography>
         </Box>
       ),
     },
@@ -58,8 +67,12 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
       field: 'price',
       headerName: 'Price',
       width: 100,
-      valueFormatter: (params: any) => 
-        `$${(params.value as number).toFixed(2)}`,
+      valueFormatter: (params: any) => {
+        if (params.value === undefined || params.value === null) {
+          return '$0.00';
+        }
+        return `$${(params.value as number).toFixed(2)}`;
+      },
     },
     {
       field: 'quantity',
@@ -74,11 +87,11 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
             <RemoveIcon fontSize="small" />
           </IconButton>
           
-          <Typography>{params.value}</Typography>
+          <Typography>{params.value || 0}</Typography>
           
           <IconButton 
             size="small"
-            onClick={() => updateQuantity(params.row.productId, params.row.quantity + 1)}
+            onClick={() => updateQuantity(params.row.productId, (params.row.quantity || 0) + 1)}
           >
             <AddIcon fontSize="small" />
           </IconButton>
@@ -89,8 +102,12 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
       field: 'total',
       headerName: 'Total',
       width: 100,
-      valueFormatter: (params: any) => 
-        `$${(params.value as number).toFixed(2)}`,
+      valueFormatter: (params: any) => {
+        if (params.value === undefined || params.value === null) {
+          return '$0.00';
+        }
+        return `$${(params.value as number).toFixed(2)}`;
+      },
     },
     {
       field: 'actions',
@@ -106,6 +123,8 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
       ),
     },
   ];
+  
+  const isCartEmpty = items.length === 0;
   
   return (
     <Drawer
@@ -124,7 +143,7 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
         
         <Divider sx={{ mb: 2 }} />
         
-        {cartRows.length === 0 ? (
+        {isCartEmpty ? (
           <Box textAlign="center" py={4}>
             <Typography variant="body1" color="text.secondary" gutterBottom>
               Your cart is empty
@@ -137,7 +156,7 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
           <>
             <Box sx={{ flexGrow: 1, mb: 3 }}>
               <DataGrid
-                rows={cartRows}
+                rows={cartRows || []}
                 columns={columns}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 5 } },
@@ -154,10 +173,7 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
             </Box>
             
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid size={{
-                xs: 12,
-                sm:8
-              }}>
+              <Grid size={{ xs: 12, sm: 8 }}>
                 <TextField
                   fullWidth
                   label="Coupon Code"
@@ -167,10 +183,7 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
                   onChange={(e) => setCouponCode(e.target.value)}
                 />
               </Grid>
-              <Grid size={{
-                xs: 12,
-                sm:4
-              }}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <Button 
                   variant="contained" 
                   color="secondary" 
@@ -197,18 +210,22 @@ export const Cart: React.FC<CartProps> = ({ open, onClose }) => {
               <Stack spacing={2}>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="body1">Subtotal:</Typography>
-                  <Typography variant="body1">${subtotal.toFixed(2)}</Typography>
+                  <Typography variant="body1">
+                    ${(subtotal || 0).toFixed(2)}
+                  </Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="body1">Discount:</Typography>
                   <Typography variant="body1" color="error">
-                    -${discount.toFixed(2)}
+                    -${(discount || 0).toFixed(2)}
                   </Typography>
                 </Box>
                 <Divider />
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="h6">Total:</Typography>
-                  <Typography variant="h6">${total.toFixed(2)}</Typography>
+                  <Typography variant="h6">
+                    ${(total || 0).toFixed(2)}
+                  </Typography>
                 </Box>
               </Stack>
             </Box>
